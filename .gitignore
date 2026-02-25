@@ -16,3 +16,4 @@ target/
 
 # Batch Temp Files
 batch-temp/
+.env
