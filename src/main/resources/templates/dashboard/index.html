@@ -19,6 +19,12 @@
 
         .htmx-request .htmx-indicator {
             display: inline;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .htmx-request.disabled-during-request {
@@ -138,9 +144,11 @@
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                     <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                         <h2 class="text-lg font-semibold text-gray-900">Recent Uploads</h2>
-                        <button hx-get="/dashboard/api/jobs/recent" hx-target="#job-table-body"
+                        <button hx-get="/dashboard/api/jobs/recent"
+                                hx-target="#job-table-body"
+                                hx-indicator="#refresh-spinner"
                                 class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                            <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                            <i id="refresh-spinner" data-lucide="refresh-cw" class="w-4 h-4 mr-2 htmx-indicator"></i>
                             Refresh
                         </button>
                     </div>
@@ -176,6 +184,7 @@
                                    hx-get="/dashboard/api/jobs/recent"
                                    hx-trigger="load, every 5s"
                                    hx-swap="innerHTML"
+                                   hx-sync="this:abort"
                                    class="bg-white divide-y divide-gray-200">
                             <th:block th:replace="~{fragments/job-table :: table-skeleton}"></th:block>
                             </tbody>

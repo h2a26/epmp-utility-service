@@ -40,6 +40,7 @@ public class ElectricityBillWriter implements ItemWriter<BillValidationResult> {
     public void write(Chunk<? extends BillValidationResult> chunk) {
         ConcurrentLinkedQueue<BillValidationResult> failureQueue = new ConcurrentLinkedQueue<>();
         LongAdder successCounter = new LongAdder();
+        LongAdder failureCounter = new LongAdder();
 
         chunk.getItems().parallelStream().forEach(result -> {
             if (result.isValid()) {
@@ -47,7 +48,6 @@ public class ElectricityBillWriter implements ItemWriter<BillValidationResult> {
                     billService.saveSingleEntity(result.validatedEntity());
                     successCounter.increment();
                 } catch (Exception e) {
-                    // Translate technical exception to short description
                     String shortError = translateException(e);
                     log.error("Job {} | Row {}: {}", jobId, result.rawData().rowNumber(), shortError);
 
@@ -57,9 +57,11 @@ public class ElectricityBillWriter implements ItemWriter<BillValidationResult> {
                             false,
                             shortError
                     ));
+                    failureCounter.increment();
                 }
             } else {
                 failureQueue.add(result);
+                failureCounter.increment();
             }
         });
 
@@ -70,16 +72,17 @@ public class ElectricityBillWriter implements ItemWriter<BillValidationResult> {
             billService.saveFailedBills(failedEntities);
         }
 
-        updateStepContextAndLog(successCounter.sum(), failureQueue.size());
+        long currentFilterCount = stepExecution.getFilterCount();
+        stepExecution.setFilterCount(currentFilterCount + failureCounter.sum());
+
+        log.info(">>> Job ID: {} | Chunk Success: {} | Chunk Failed: {} | Total Written: {} | Total Filtered: {}",
+                jobId, successCounter.sum(), failureCounter.sum(),
+                stepExecution.getWriteCount(), stepExecution.getFilterCount());
     }
 
-    /**
-     * Maps complex DB exceptions to short, user-friendly strings.
-     */
     private String translateException(Exception e) {
         if (e instanceof DataIntegrityViolationException) {
             String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-            // Check for our specific composite unique constraint
             if (msg.contains("uq_consumer_area") || (msg.contains("consumer_no") && msg.contains("area"))) {
                 return "Duplicate: Consumer already exists in this area.";
             }
@@ -89,17 +92,5 @@ public class ElectricityBillWriter implements ItemWriter<BillValidationResult> {
             return "Database Integrity Error: Constraint violation.";
         }
         return "System Error: Unexpected database failure.";
-    }
-
-    private synchronized void updateStepContextAndLog(long successDelta, long failedDelta) {
-        var ec = stepExecution.getExecutionContext();
-        long totalSuccess = ec.getLong("CUSTOM_SUCCESS_COUNT", 0L) + successDelta;
-        long totalFailed = ec.getLong("CUSTOM_FAILED_COUNT", 0L) + failedDelta;
-
-        ec.putLong("CUSTOM_SUCCESS_COUNT", totalSuccess);
-        ec.putLong("CUSTOM_FAILED_COUNT", totalFailed);
-
-        log.info(">>> Job ID: {} | Success: {} | Failed: {} | Cumulative (S: {}, F: {})",
-                jobId, successDelta, failedDelta, totalSuccess, totalFailed);
     }
 }

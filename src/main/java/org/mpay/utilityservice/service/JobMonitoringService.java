@@ -3,11 +3,9 @@ package org.mpay.utilityservice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mpay.utilityservice.dto.JobExecutionInfo;
-import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.explore.JobExplorer;
-import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -41,14 +39,15 @@ public class JobMonitoringService {
         String fileName = jobExecution.getJobParameters().getString("originalFileName");
         if (fileName == null) fileName = "Unknown";
 
-        // Logic: Extract our custom counters from the execution context of each step
         long totalSuccess = 0;
         long totalFailed = 0;
 
         for (StepExecution stepExecution : jobExecution.getStepExecutions()) {
-            ExecutionContext ec = stepExecution.getExecutionContext();
-            totalSuccess += ec.getLong("CUSTOM_SUCCESS_COUNT", 0L);
-            totalFailed += ec.getLong("CUSTOM_FAILED_COUNT", 0L);
+            totalSuccess += stepExecution.getWriteCount();
+
+            totalFailed += stepExecution.getFilterCount()
+                    + stepExecution.getProcessSkipCount()
+                    + stepExecution.getWriteSkipCount();
         }
 
         String startTime = jobExecution.getStartTime() != null
