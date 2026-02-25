@@ -1,0 +1,74 @@
+{
+  "info": {
+    "_postman_id": "23949fbe-0b72-4a19-9e25-ba2cc5d1b02c",
+    "name": "epmp-utility-service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49316643",
+    "_collection_link": "https://go.postman.co/collection/49316643-23949fbe-0b72-4a19-9e25-ba2cc5d1b02c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "http://localhost:8080/api/internal/users/create",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"username\": \"new_admin2\",\r\n    \"password\": \"strongPassword123\",\r\n    \"role\": \"ADMIN\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/internal/users/create",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "internal",
+            "users",
+            "create"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "http://localhost:8080/api/internal/users/update/new_admin2",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"password\": \"evenStrongerPassword456\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/internal/users/update/new_admin2",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "internal",
+            "users",
+            "update",
+            "new_admin2"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

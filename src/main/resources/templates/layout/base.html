@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle != null ? pageTitle + ' - MPay' : 'MPay Dashboard'}">MPay Dashboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        .htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
+        .htmx-settling { opacity: 1; transition: opacity 200ms ease-in; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex h-screen overflow-hidden">
+        <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <main class="flex-1 overflow-y-auto p-6">
+                <div th:replace="${content}"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        document.body.addEventListener('htmx:afterSwap', function() {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+<script>
+    // Add this inside the <script> tag in base.html
+    document.body.addEventListener('htmx:beforeOnLoad', function (evt) {
+        // If the response is the login page, but we are currently on the dashboard,
+        // it means the session expired or a logout happened.
+        // Force the browser to do a full-page redirect.
+        if (evt.detail.xhr.responseURL.includes('/login')) {
+            window.location.href = evt.detail.xhr.responseURL;
+        }
+    });
+</script>
+</html>

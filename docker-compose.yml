@@ -1,0 +1,43 @@
+services:
+  app:
+    build: .
+    image: epmp-utility-service:main
+    container_name: epmp-utility-service
+    ports:
+      - "8786:8080"
+    environment:
+      # Activate the SIT profile
+      - SPRING_PROFILES_ACTIVE=sit
+
+      # Database connection to the external server
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://sit-acc-engine-db:5432/postgres?currentSchema=prepost&options=-c%20TimeZone=Asia/Yangon
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=Adm1n
+
+      # Garage S3 credentials (overriding the .yml defaults)
+      - GARAGE_HOST=garaged
+      - GARAGE_PORT=3900
+      - GARAGE_ACCESS_KEY=GKad53114d2d2e70e6c3117a32
+      - GARAGE_SECRET_KEY=4517617c2168feb4e33950c4321f784c4a9fc4ce3fe7e1ca78b2e12e6225680b
+      - GARAGE_BUCKET=sit-epmp
+      - GARAGE_ELECTRICITYBILL_DIR=electricitybill
+
+      # Path mapping to match the 'storage' section in your YAML
+      - TEMP_PATH=/app/batch-temp
+
+    volumes:
+      # Persist the batch-temp folder locally so you can inspect files if needed
+      - ./batch-temp:/app/batch-temp
+    restart: unless-stopped
+    networks:
+      - mpay_network
+      - garage_network
+
+networks:
+  mpay_network:
+    name: mpay_network
+    external: true
+  garage_network:
+    name: garage_default
+    external: true
+

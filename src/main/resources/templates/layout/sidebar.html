@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside th:fragment="sidebar"
+       class="w-70 bg-white border-r border-gray-200 flex flex-col h-full rounded-r-[20px] shadow-[4px_0_8px_rgba(0,0,0,0.1)]">
+    <div class="p-6">
+        <div class="flex items-center space-x-2">
+            <svg width="228" height="76" viewBox="0 0 228 76" fill="none" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink">
+                <rect width="228" height="76" fill="url(#pattern0_60676_76975)"></rect>
+                <defs>
+                    <pattern id="pattern0_60676_76975" patternContentUnits="objectBoundingBox" width="1" height="1">
+                        <use xlink:href="#image0_60676_76975"
+                             transform="matrix(0.00653595 0 0 0.0196078 0 0.0980392)"></use>
+                    </pattern>
+                    <image id="image0_60676_76975" width="153" height="41" preserveAspectRatio="none"
+                           xlink:href="data:image/png;base64,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"></image>
+                </defs>
+            </svg>
+        </div>
+    </div>
+
+    <div class="mb-[12px] -mx-1 border-b-2 border-gray-200"></div>
+
+    <li class="px-4 list-none mb-[20px]">
+        <div class="flex items-center w-full gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 transition-colors duration-200 overflow-hidden group">
+            <span class="flex items-center justify-center w-8 h-8 bg-[#124F91] text-white flex-shrink-0 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </span>
+
+            <div class="flex flex-col items-start leading-[1.2] min-w-0">
+                <span class="text-sm font-bold text-gray-900 truncate w-full text-left"
+                      th:text="${#authentication?.name ?: 'Guest'}">Username</span>
+                <span class="text-[11px] text-gray-500 truncate w-full text-left">System Administrator</span>
+            </div>
+
+            <span class="ml-auto flex items-center justify-center cursor-pointer p-1 text-gray-400 hover:text-red-600 transition-colors"
+                  title="Logout"
+                  hx-post="/logout"
+                  hx-trigger="click">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m16 17 5-5-5-5"></path>
+                    <path d="M21 12H9"></path>
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                </svg>
+            </span>
+        </div>
+    </li>
+
+    <nav class="flex-1 px-4 space-y-2">
+        <a th:href="@{/dashboard}"
+           th:classappend="${currentPage == 'dashboard' ? 'bg-[#124F91] text-white' : 'text-gray-700 hover:bg-gray-100'}"
+           class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors group">
+            <i data-lucide="home" class="w-5 h-5 flex-shrink-0"></i>
+            <span class="font-medium">Dashboard</span>
+        </a>
+
+        <a th:href="@{/dashboard/settings}"
+           th:classappend="${currentPage == 'settings' ? 'bg-[#124F91] text-white' : 'text-gray-700 hover:bg-gray-100'}"
+           class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors group">
+            <i data-lucide="settings" class="w-5 h-5 flex-shrink-0"></i>
+            <span class="font-medium">Settings</span>
+        </a>
+    </nav>
+</aside>
+</body>
+</html>

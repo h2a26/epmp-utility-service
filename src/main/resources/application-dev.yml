@@ -1,0 +1,24 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://139.59.53.120:5433/postgres?currentSchema=prepost&options=-c%20TimeZone=Asia/Yangon
+    username: postgres
+    password: Adm1n
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+garage:
+  bucket: "sit-mpay"
+  electricitybill_dir: "electricitybill"
+  access_key: "GKdc6549790849c5c032798435"
+  secret_key: "c4bc9b09f358164cb213bbb9694074a2b79bd742283dca6184eb19d7eb249ff4"
+  host: 139.59.53.120
+  port: 3900
+
+storage:
+  local-temp-path: ./batch-temp

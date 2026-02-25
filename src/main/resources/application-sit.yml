@@ -1,0 +1,23 @@
+spring:
+  config:
+    activate:
+      on-profile: sit
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db:5432/postgres?currentSchema=prepost&options=-c%20TimeZone=Asia/Yangon}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:Adm1n}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+garage:
+  bucket: ${GARAGE_BUCKET}
+  electricitybill_dir: ${GARAGE_ELECTRICITYBILL_DIR}
+  access_key: ${GARAGE_ACCESS_KEY}
+  secret_key: ${GARAGE_SECRET_KEY}
+  host: ${GARAGE_HOST}
+  port: ${GARAGE_PORT}
+
+storage:
+  local-temp-path: ${TEMP_PATH:/app/batch-temp}

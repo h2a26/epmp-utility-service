@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:hx="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Bill Upload - MPay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .htmx-indicator {
+            display: none;
+        }
+
+        .htmx-request .htmx-indicator {
+            display: inline;
+        }
+
+        .htmx-request.disabled-during-request {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        #job-table-body.htmx-request {
+            opacity: 0.6;
+            transition: opacity 200ms ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen" x-data="uploadManager()">
+<div class="flex h-screen overflow-hidden">
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 overflow-y-auto p-6">
+            <div class="max-w-7xl mx-auto">
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Electricity Bill Upload</h1>
+                    <p class="text-sm text-gray-500 mt-1">Dashboard / Upload</p>
+                </div>
+
+                <div id="upload-result-container" class="mb-4"></div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                    <div class="flex flex-col md:flex-row md:items-start md:space-x-8">
+
+                        <div class="md:w-1/3 mb-6 md:mb-0">
+                            <div class="inline-flex items-center justify-center w-12 h-12 bg-blue-50 rounded-lg mb-4">
+                                <i data-lucide="file-spreadsheet" class="w-6 h-6 text-blue-900"></i>
+                            </div>
+                            <h2 class="text-xl font-bold text-gray-900 mb-2">Upload Data</h2>
+                            <p class="text-sm text-gray-500 leading-relaxed">
+                                Excel processing runs in the background. You can upload multiple files without waiting
+                                for the previous ones to finish.
+                            </p>
+                        </div>
+
+                        <form id="upload-form"
+                              hx-post="/dashboard/api/upload"
+                              hx-target="#upload-result-container"
+                              hx-encoding="multipart/form-data"
+                              hx-indicator="#upload-spinner"
+                              class="flex-1 space-y-4">
+
+                            <div class="group border-2 border-dashed rounded-xl p-6 text-center transition-all relative"
+                                 :class="{
+                                    'border-blue-500 bg-blue-50': isDragging,
+                                    'border-green-500 bg-green-50/50': fileSelected && !isUploading,
+                                    'border-gray-200 hover:border-gray-300 bg-gray-50/30': !isDragging && !fileSelected,
+                                    'opacity-60 cursor-not-allowed': isUploading
+                                 }"
+                                 @dragover.prevent="if(!isUploading) isDragging = true"
+                                 @dragleave.prevent="isDragging = false"
+                                 @drop.prevent="handleDrop($event)">
+
+                                <input type="file" name="file" x-ref="fileInput" accept=".xlsx,.xls" class="hidden"
+                                       @change="handleFileSelect($event)" :disabled="isUploading" required/>
+
+                                <div x-show="fileSelected" x-cloak
+                                     class="flex items-center justify-between bg-white p-3 rounded-lg border border-green-200 shadow-sm">
+                                    <div class="flex items-center space-x-3 text-left">
+                                        <div class="p-2 bg-green-100 rounded">
+                                            <i data-lucide="check-circle" class="w-5 h-5 text-green-600"></i>
+                                        </div>
+                                        <div class="overflow-hidden">
+                                            <p class="text-sm font-semibold text-gray-900 truncate max-w-[200px]"
+                                               x-text="fileName"></p>
+                                            <p class="text-xs text-gray-500" x-text="fileSize"></p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="resetForm()" :disabled="isUploading"
+                                            class="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <div x-show="!fileSelected" class="py-2">
+                                    <p class="text-sm text-gray-600 mb-3">Drag file here or</p>
+                                    <button type="button" @click="$refs.fileInput.click()"
+                                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 shadow-sm rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all">
+                                        <i data-lucide="search" class="w-4 h-4 mr-2"></i>
+                                        Choose File
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-end space-x-3">
+                                <a th:href="@{/dashboard/api/download-template}"
+                                   class="inline-flex items-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all shadow-sm">
+                                    <i data-lucide="download" class="w-4 h-4 mr-2"></i>
+                                    Download Template
+                                </a>
+
+                                <button type="submit"
+                                        :disabled="!fileSelected || isUploading"
+                                        class="inline-flex items-center px-8 py-2.5 bg-blue-900 text-white rounded-lg font-medium hover:bg-blue-800 transition-all shadow-sm disabled:bg-gray-300">
+                                        <span id="upload-spinner" class="htmx-indicator mr-2">
+                                             <svg class="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                         stroke-width="4"></circle>
+                                                 <path class="opacity-75" fill="currentColor"
+                                                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                             </svg>
+                                        </span>
+                                    <i data-lucide="zap" class="w-4 h-4 mr-2" x-show="!isUploading"></i>
+                                    <span x-text="isUploading ? 'Uploading...' : 'Start Upload'"></span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <h2 class="text-lg font-semibold text-gray-900">Recent Uploads</h2>
+                        <button hx-get="/dashboard/api/jobs/recent" hx-target="#job-table-body"
+                                class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                            <i data-lucide="refresh-cw" class="w-4 h-4 mr-2"></i>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-blue-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Job ID
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Filename
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider text-green-700">
+                                    Passed
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider text-red-700">
+                                    Failed
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody id="job-table-body"
+                                   hx-get="/dashboard/api/jobs/recent"
+                                   hx-trigger="load, every 5s"
+                                   hx-swap="innerHTML"
+                                   class="bg-white divide-y divide-gray-200">
+                            <th:block th:replace="~{fragments/job-table :: table-skeleton}"></th:block>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    function uploadManager() {
+        return {
+            isDragging: false,
+            fileSelected: false,
+            isUploading: false,
+            fileName: '',
+            fileSize: '',
+
+            handleFileSelect(event) {
+                if (this.isUploading) return;
+                const file = event.target.files[0];
+                if (file) this.stageFile(file);
+            },
+
+            handleDrop(event) {
+                if (this.isUploading) return;
+                this.isDragging = false;
+                const file = event.dataTransfer.files[0];
+                if (file && (file.name.endsWith('.xlsx') || file.name.endsWith('.xls'))) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    this.$refs.fileInput.files = dataTransfer.files;
+                    this.stageFile(file);
+                }
+            },
+
+            stageFile(file) {
+                this.fileSelected = true;
+                this.fileName = file.name;
+                this.fileSize = this.formatFileSize(file.size);
+                this.$nextTick(() => lucide.createIcons());
+            },
+
+            resetForm() {
+                this.fileSelected = false;
+                this.fileName = '';
+                this.fileSize = '';
+                this.$refs.fileInput.value = '';
+                this.isUploading = false;
+                this.$nextTick(() => lucide.createIcons());
+            },
+
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        const form = document.getElementById('upload-form');
+
+        // Manage state during the HTMX request
+        form.addEventListener('htmx:beforeRequest', () => {
+            Alpine.$data(form).isUploading = true;
+        });
+
+        form.addEventListener('htmx:afterRequest', (event) => {
+            const data = Alpine.$data(form);
+            data.isUploading = false;
+
+            if (event.detail.successful) {
+                // Success: Reset UI for the NEXT file immediately
+                data.resetForm();
+                // Force-refresh the table to show the newly registered job
+                htmx.trigger('#job-table-body', 'load');
+            }
+        });
+    });
+
+    document.body.addEventListener('htmx:afterSwap', () => lucide.createIcons());
+</script>
+</body>
+</html>

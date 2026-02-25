@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="job-rows">
+    <tr th:each="job : ${jobs}" class="hover:bg-gray-50 transition-colors border-b border-gray-100">
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <span class="text-xs font-mono font-bold text-gray-400" th:text="'#' + ${job.jobId}"></span>
+        </td>
+
+        <td class="px-6 py-4">
+            <div class="flex items-center justify-start">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-blue-500 mr-2"></i>
+                <span class="text-sm font-medium text-gray-900 truncate max-w-xs" th:text="${job.fileName}"></span>
+            </div>
+        </td>
+
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex justify-center">
+                <span th:replace="~{fragments/job-status :: status-badge(${job})}"></span>
+            </div>
+        </td>
+
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex flex-col items-center justify-center">
+                <span class="text-sm font-bold text-green-600"
+                      th:text="${#numbers.formatInteger(job.successCount, 0, 'COMMA')}">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Passed</span>
+            </div>
+        </td>
+
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex flex-col items-center justify-center">
+                <span class="text-sm font-bold"
+                      th:classappend="${job.failedCount > 0 ? 'text-red-600' : 'text-gray-300'}"
+                      th:text="${#numbers.formatInteger(job.failedCount, 0, 'COMMA')}">0</span>
+                <span class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">Failed</span>
+            </div>
+        </td>
+
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex items-center justify-center text-sm text-gray-500">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 mr-1.5 opacity-60"></i>
+                <span th:text="${job.startTime}"></span>
+            </div>
+        </td>
+
+        <td class="px-6 py-4 whitespace-nowrap text-center">
+            <div class="flex items-center justify-center">
+                <a th:if="${job.failedCount > 0}"
+                   th:href="@{/dashboard/api/jobs/{id}/export-failed(id=${job.jobId})}"
+                   class="inline-flex items-center p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100"
+                   title="Download Failed Report">
+                    <i data-lucide="file-down" class="w-4 h-4"></i>
+                    <span class="ml-1 text-xs font-semibold">Failed Report</span>
+                </a>
+
+                <span th:if="${job.failedCount == 0}" class="text-gray-300">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                </span>
+            </div>
+        </td>
+    </tr>
+    </tr>
+
+    <tr th:if="${#lists.isEmpty(jobs)}">
+        <td colspan="6" class="px-6 py-12 text-center text-gray-500 bg-gray-50/50">
+            <div class="flex flex-col items-center justify-center">
+                <div class="p-4 bg-gray-100 rounded-full mb-3">
+                    <i data-lucide="inbox" class="w-8 h-8 text-gray-300"></i>
+                </div>
+                <p class="font-medium text-gray-600">No recent uploads detected</p>
+            </div>
+        </td>
+    </tr>
+</th:block>
+
+
+<th:block th:fragment="table-skeleton">
+    <tr th:each="i : ${#numbers.sequence(1, 5)}" class="animate-pulse border-b border-gray-100">
+        <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+        <td class="px-6 py-4">
+            <div class="flex items-center">
+                <div class="w-4 h-4 bg-gray-200 rounded mr-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-32"></div>
+            </div>
+        </td>
+        <td class="px-6 py-4"><div class="h-6 bg-gray-200 rounded-full w-20 mx-auto"></div></td>
+        <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+        <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+        <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-24 mx-auto"></div></td>
+        <td class="px-6 py-4"><div class="h-8 bg-gray-100 rounded-lg w-24 mx-auto"></div></td>
+    </tr>
+</th:block>
+
+</body>
+</html>
